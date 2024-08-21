@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<title>Todo List</title>
+<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+<style>
+  .todo-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .centered-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .todo-input-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  .todo-input-wrapper input {
+    flex: 1;
+    max-width: 80%;
+  }
+  .todo-input-wrapper button {
+    margin-left: 10px;
+    flex: 0 0 auto;
+  }
+</style>
+</head>
+<body>
+<div class="container mt-5 centered-container">
+  <h1 class="mb-4 text-center">Todo List</h1>
+  <div class="mb-3 todo-input-wrapper">
+    <input id="todoInput" type="text" class="form-control" placeholder="Add a new task">
+    <button id="addTodo" class="btn btn-primary">Add Task</button>
+  </div>
+  <ul id="todoList" class="list-group">
+    <!-- Todo items will be added here -->
+  </ul>
+</div>
+
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+<script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+  // Load todos from local storage on page load
+  loadTodos();
+
+  $('#addTodo').click(function() {
+    const todoText = $('#todoInput').val();
+    if (todoText) {
+      const todoItem = `
+        <li class="list-group-item todo-list-item">
+          <span>${todoText}</span>
+          <div>
+            <button class="btn btn-warning btn-sm mx-1 editTodo">Edit</button>
+            <button class="btn btn-danger btn-sm deleteTodo">Delete</button>
+          </div>
+        </li>
+      `;
+      $('#todoList').append(todoItem);
+      $('#todoInput').val('');
+      saveTodos();
+    }
+  });
+
+  $(document).on('click', '.deleteTodo', function() {
+    const $todoItem = $(this).closest('.todo-list-item');
+    
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'No, cancel!',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $todoItem.remove();
+        Swal.fire(
+          'Deleted!',
+          'Your todo has been deleted.',
+          'success'
+        )
+        saveTodos();
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire(
+          'Cancelled',
+          'Your todo is safe :)',
+          'error'
+        )
+      }
+    });
+  });
+
+  $(document).on('click', '.editTodo', function() {
+    const $todoItem = $(this).closest('.todo-list-item');
+    const currentText = $todoItem.find('span').text();
+    const newText = prompt('Edit todo:', currentText);
+    if (newText) {
+      $todoItem.find('span').text(newText);
+      saveTodos();
+    }
+  });
+
+  function saveTodos() {
+    const todos = [];
+    $('#todoList .todo-list-item').each(function() {
+      const text = $(this).find('span').text();
+      todos.push(text);
+    });
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }
+
+  function loadTodos() {
+    const todos = JSON.parse(localStorage.getItem('todos')) || [];
+    todos.forEach(function(todoText) {
+      const todoItem = `
+        <li class="list-group-item todo-list-item">
+          <span>${todoText}</span>
+          <div>
+            <button class="btn btn-warning btn-sm mx-1 editTodo">Edit</button>
+            <button class="btn btn-danger btn-sm deleteTodo">Delete</button>
+          </div>
+        </li>
+      `;
+      $('#todoList').append(todoItem);
+    });
+  }
+});
+</script>
+</body>
+</html>
